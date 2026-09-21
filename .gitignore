@@ -1,0 +1,11 @@
+# Entorno virtual y caché de Python
+.venv/
+__pycache__/
+*.pyc
+
+# Datos generados al usar el asistente
+datos/
+piezas/
+
+# Credenciales y configuración local
+.env

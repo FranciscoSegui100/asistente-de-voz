@@ -1,0 +1,12 @@
+# Librerías del código base
+pyttsx3
+SpeechRecognition
+PyAudio
+pywhatkit
+yfinance
+pyjokes
+wikipedia
+# Librerías agregadas para el área de marketing digital
+Pillow
+schedule
+requests
