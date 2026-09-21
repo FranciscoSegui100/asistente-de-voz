@@ -21,6 +21,7 @@ import threading
 import time
 import tkinter as tk
 import traceback
+import webbrowser
 from tkinter import messagebox, simpledialog, ttk
 
 from PIL import Image, ImageTk
@@ -204,7 +205,8 @@ class VistaChat(Vista):
         self.canvas.yview_moveto(1.0)
 
     # -- mensajes --
-    def agregar(self, quien, texto=None, imagen=None):
+    def _nueva_burbuja(self, quien):
+        """Crea la fila y la burbuja de un mensaje ('user' a la derecha, 'bot' a la izquierda)."""
         es_usuario = quien == "user"
         fila = tk.Frame(self.interior, bg=PANEL)
         fila.pack(fill="x", padx=16, pady=(2, 0))
@@ -213,10 +215,46 @@ class VistaChat(Vista):
         elif quien != self._ultimo:
             tk.Frame(fila, bg=PANEL, height=10).pack()
         self._ultimo = quien
-
         color = ACENTO if es_usuario else PANEL2
         burbuja = tk.Frame(fila, bg=color)
         burbuja.pack(anchor="e" if es_usuario else "w")
+        self._rueda(fila)
+        self._rueda(burbuja)
+        return burbuja, color
+
+    def agregar_resultados(self, titulo, items):
+        """Muestra resultados de una búsqueda como una tarjeta con enlaces clicables."""
+        burbuja, color = self._nueva_burbuja("bot")
+        tarjeta = tk.Frame(burbuja, bg=color)
+        tarjeta.pack(padx=14, pady=10)
+
+        def texto(fuente, fg, contenido, **kw):
+            lab = tk.Label(tarjeta, text=contenido, bg=color, fg=fg, font=fuente, justify="left", anchor="w",
+                           wraplength=self._wrap - 28, **kw)
+            lab.pack(fill="x", anchor="w")
+            self._burbujas.append(lab)
+            self._rueda(lab)
+            return lab
+
+        texto((FUENTE, 11, "bold"), TEXTO, titulo).pack_configure(pady=(0, 6))
+        for i, it in enumerate(items):
+            if i:
+                tk.Frame(tarjeta, bg=BORDE, height=1).pack(fill="x", pady=8)
+            enlace = texto((FUENTE, 11, "bold"), ACENTO_H, it["titulo"] or it["url"])
+            if it.get("url"):
+                enlace.config(cursor="hand2")
+                enlace.bind("<Button-1>", lambda e, u=it["url"]: webbrowser.open(u))
+                enlace.bind("<Enter>", lambda e, l=enlace: l.config(font=(FUENTE, 11, "bold underline")))
+                enlace.bind("<Leave>", lambda e, l=enlace: l.config(font=(FUENTE, 11, "bold")))
+            if it.get("meta"):
+                texto((FUENTE, 9), SUAVE, it["meta"])
+            if it.get("texto"):
+                texto((FUENTE, 10), TEXTO, it["texto"]).pack_configure(pady=(2, 0))
+        self.after_idle(self._al_final)
+
+    def agregar(self, quien, texto=None, imagen=None):
+        es_usuario = quien == "user"
+        burbuja, color = self._nueva_burbuja(quien)
         if texto:
             lab = tk.Label(burbuja, text=texto, bg=color, fg="#1b1b1b" if es_usuario else TEXTO,
                            font=(FUENTE, 11), justify="left", anchor="w", wraplength=self._wrap, padx=14, pady=9)
@@ -229,8 +267,6 @@ class VistaChat(Vista):
             lab = tk.Label(burbuja, image=foto, bg=color, padx=6, pady=6)
             lab.pack(padx=6, pady=6)
             self._rueda(lab)
-        self._rueda(fila)
-        self._rueda(burbuja)
         self.after_idle(self._al_final)
 
     def poner_estado(self, texto):
@@ -722,6 +758,7 @@ class App(tk.Tk):
         voz.salida_gui = self._salida
         voz.entrada_gui = self._esperar_respuesta
         diseno.mostrar_pieza = lambda ruta: self.ui(lambda: self._pieza_creada(ruta))
+        base.mostrar_resultados = lambda titulo, items: self.ui(lambda: self.chat.agregar_resultados(titulo, items))
 
         self.after(50, self._vaciar_cola)
         en_hilo(self._bucle_asistente)

@@ -20,7 +20,7 @@ python interfaz.py        # interfaz gráfica (o doble clic en iniciar_interfaz.
 
 | Sección | Qué hace |
 |---|---|
-| **Asistente** | Chat con Nova: se le escribe o se le habla con el botón *Hablar*. Usa el mismo motor de pedidos que `main.py`, así que entiende los mismos comandos. Incluye atajos y el botón *Voz activada/silenciada* para que solo escriba. |
+| **Asistente** | Chat con Nova: se le escribe o se le habla con el botón *Hablar*. Usa el mismo motor de pedidos que `main.py`, así que entiende los mismos comandos. Incluye atajos y el botón *Voz activada/silenciada* para que solo escriba. Las búsquedas («buscá en internet…», «buscá en Wikipedia…», «reproducir…») se muestran en el chat como tarjetas con enlaces clicables, sin abrir el navegador hasta que hagas clic en uno. |
 | **Calendario** | Formulario para agendar (acepta `25/09/2026`, `mañana`, `18:30`), tabla de publicaciones, marcar como publicada y eliminar. |
 | **Diseño** | Placas y carruseles con selector de formato y paleta, vista previa, botón para abrir la carpeta `piezas/` y publicar en Instagram. |
 | **Comunidad** | Lista de comentarios clasificados (quejas primero), respuesta sugerida editable y envío con un clic. |

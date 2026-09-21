@@ -10,3 +10,4 @@ wikipedia
 Pillow
 schedule
 requests
+ddgs
