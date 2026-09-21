@@ -44,5 +44,22 @@ URL_PUBLICA_PIEZAS = os.getenv("URL_PUBLICA_PIEZAS", "")
 
 MODO_DEMO_REDES = not (META_ACCESS_TOKEN and IG_USER_ID)
 
+# ---------------- Excusas para no trabajar ("dame una excusa") ----------------
+# Agregá, cambiá o borrá las que quieras: Nova elige una al azar sin repetir la anterior.
+EXCUSAS = [
+    "Decí que el algoritmo de Instagram cambió otra vez y estás esperando a ver cómo se acomoda antes de publicar nada.",
+    "Decí que estás haciendo investigación de mercado profunda. Es decir, mirando reels con mucha atención.",
+    "Decí que se te cayó el wifi, y que casualmente se fue justo cuando ibas a empezar.",
+    "Decí que tu creatividad está en modo de carga y que apurarla arruina el contenido.",
+    "Decí que la paleta de colores no te terminó de convencer y que no querés lanzar nada a medias.",
+    "Decí que estás en una reunión estratégica con vos mismo, y que va para largo.",
+    "Decí que el calendario de contenidos está tan perfecto que tocarlo hoy sería un error.",
+    "Decí que estás analizando métricas. Nadie te va a pedir ver la planilla.",
+    "Decí que tu compu se puso a instalar actualizaciones y que Windows dijo que no la apagues.",
+    "Decí que estás haciendo un descanso de pantalla para cuidar la vista, es salud ocupacional.",
+    "Decí que estás esperando la aprobación del cliente. Técnicamente es cierto: esperás la tuya.",
+    "Decí que hoy se te dio por pensar en grande y que las ideas grandes no se rinden un lunes.",
+]
+
 # ---------------- Recordatorios ----------------
 MINUTOS_AVISO_PREVIO = 15    # avisar X minutos antes de cada publicación

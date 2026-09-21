@@ -149,8 +149,9 @@ class VistaChat(Vista):
     titulo = "Asistente"
     subtitulo = "Escribí o hablá: agendá publicaciones, creá piezas y gestioná tus comentarios."
     ATAJOS = [("¿Qué hora es?", "qué hora es"), ("Publicaciones de hoy", "qué tengo para publicar hoy"),
-              ("Leer comentarios", "leé los comentarios"), ("Resumen de comentarios", "resumen de comentarios"),
-              ("Contame un chiste", "contame un chiste"), ("Ayuda", "ayuda")]
+              ("Leer comentarios", "leé los comentarios"), ("Resumen", "resumen de comentarios"),
+              ("Un chiste", "contame un chiste"), ("Una excusa", "dame una excusa para no trabajar"),
+              ("Ayuda", "ayuda")]
 
     def construir(self, cuerpo):
         self._fotos = []

@@ -23,7 +23,7 @@ AYUDA = """Puedo ayudarte con:
 Calendario: agendá un post en Instagram para el jueves a las 18 sobre la promo. Qué tengo para publicar hoy, mañana o esta semana. Marcá como publicada la 3. Borrá la publicación 2.
 Diseño: creá una placa que diga 20 por ciento off. Armá un carrusel de 3 slides. Podés pedir paleta clara, oscura o vibrante, y formato historia o cuadrado.
 Comunidad: leé los comentarios. Resumen de comentarios. Respondé los comentarios. Publicá la última pieza.
-Además: qué hora es, qué día es, buscá en Wikipedia, buscá en internet, reproducir una canción, contame un chiste, precio de la acción de Apple, abrir Instagram. Para terminar, decí adiós."""
+Además: qué hora es, qué día es, buscá en Wikipedia, buscá en internet, reproducir una canción, contame un chiste, dame una excusa para no trabajar, precio de la acción de Apple, abrir Instagram. Para terminar, decí adiós."""
 
 SITIOS = {
     "instagram": "https://www.instagram.com",
@@ -99,6 +99,8 @@ def procesar_pedido(pedido_original):
         base.reproducir_youtube(pedido.split(" ", 1)[1] if " " in pedido else "")
     elif "chiste" in pedido:
         base.contar_chiste()
+    elif contiene(pedido, "excusa", "no trabajar", "zafar"):
+        base.dar_excusa()
     elif contiene(pedido, "precio de la accion"):
         base.precio_accion(pedido.split("accion", 1)[1].replace("de ", "", 1))
     elif pedido.startswith("abri") or pedido.startswith("abrir"):
