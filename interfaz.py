@@ -124,6 +124,7 @@ class Vista(tk.Frame):
     def __init__(self, master, app):
         super().__init__(master, bg=BG)
         self.app = app
+        self._t_aviso = None
         cab = tk.Frame(self, bg=BG)
         cab.pack(fill="x", padx=28, pady=(24, 10))
         tk.Label(cab, text=self.titulo, font=(FUENTE, 20, "bold"), bg=BG, fg=TEXTO, anchor="w").pack(anchor="w")
@@ -139,6 +140,9 @@ class Vista(tk.Frame):
 
     def msg(self, texto, error=False):
         self.aviso.config(text=texto, fg=ERR if error else OK)
+        if self._t_aviso:
+            self.after_cancel(self._t_aviso)
+        self._t_aviso = self.after(8000, lambda: self.aviso.config(text=""))
 
     def al_mostrar(self):
         pass
@@ -150,12 +154,11 @@ class VistaChat(Vista):
     subtitulo = "Escribí o hablá: agendá publicaciones, creá piezas y gestioná tus comentarios."
     ATAJOS = [("¿Qué hora es?", "qué hora es"), ("Publicaciones de hoy", "qué tengo para publicar hoy"),
               ("Leer comentarios", "leé los comentarios"), ("Resumen", "resumen de comentarios"),
-              ("Un chiste", "contame un chiste"), ("Una excusa", "dame una excusa para no trabajar"),
-              ("Ayuda", "ayuda")]
+              ("Un chiste", "contame un chiste"), ("Ayuda", "ayuda")]
 
     def construir(self, cuerpo):
         self._fotos = []
-        self._burbujas = []
+        self._burbujas = []     # (etiqueta, margen que se resta al ancho máximo)
         self._ultimo = None
         self._wrap = 520
 
@@ -198,8 +201,8 @@ class VistaChat(Vista):
     def _ajustar(self, evento):
         self.canvas.itemconfigure(self._ventana, width=evento.width)
         self._wrap = max(240, int(evento.width * 0.66))
-        for lab in self._burbujas:
-            lab.configure(wraplength=self._wrap)
+        for lab, margen in self._burbujas:
+            lab.configure(wraplength=self._wrap - margen)
 
     def _al_final(self):
         self.canvas.update_idletasks()
@@ -233,7 +236,7 @@ class VistaChat(Vista):
             lab = tk.Label(tarjeta, text=contenido, bg=color, fg=fg, font=fuente, justify="left", anchor="w",
                            wraplength=self._wrap - 28, **kw)
             lab.pack(fill="x", anchor="w")
-            self._burbujas.append(lab)
+            self._burbujas.append((lab, 28))
             self._rueda(lab)
             return lab
 
@@ -260,7 +263,7 @@ class VistaChat(Vista):
             lab = tk.Label(burbuja, text=texto, bg=color, fg="#1b1b1b" if es_usuario else TEXTO,
                            font=(FUENTE, 11), justify="left", anchor="w", wraplength=self._wrap, padx=14, pady=9)
             lab.pack()
-            self._burbujas.append(lab)
+            self._burbujas.append((lab, 0))
             self._rueda(lab)
         if imagen:
             foto = ImageTk.PhotoImage(imagen)
@@ -287,6 +290,15 @@ class VistaChat(Vista):
 
     def al_mostrar(self):
         self.entrada.focus_set()
+
+
+def piezas_del_conjunto(ruta):
+    """Si la pieza es una slide de un carrusel, devuelve todas sus slides en orden."""
+    m = re.match(r"(carrusel_\d{8}_\d{6})_\d+\.png$", os.path.basename(ruta))
+    if not m:
+        return [ruta]
+    return sorted(glob.glob(os.path.join(os.path.dirname(ruta), m.group(1) + "_*.png")),
+                  key=lambda r: int(re.search(r"_(\d+)\.png$", r).group(1)))
 
 
 # ---------------- Calendario ----------------
@@ -392,6 +404,8 @@ class VistaCalendario(Vista):
             return self.msg("No entendí la hora. Probá con 18:30.", error=True)
         if not tema:
             return self.msg("Escribí de qué trata la publicación.", error=True)
+        if datetime.datetime.combine(fecha, datetime.time(*hora)) < datetime.datetime.now():
+            return self.msg("Esa fecha y hora ya pasaron. Elegí un momento futuro.", error=True)
         id_pub = calendario.agregar_publicacion(self.v_red.get(), self.v_tipo.get(), fecha, hora, tema)
         self.v_tema.set("")
         self.msg(f"Listo, agendé la publicación número {id_pub} para el {fecha.strftime('%d/%m/%Y')} "
@@ -547,8 +561,13 @@ class VistaDiseno(Vista):
     def _cargar(self):
         if not self.rutas:
             return
-        self._original = Image.open(self.rutas[self.indice])
-        self._original.load()
+        try:
+            self._original = Image.open(self.rutas[self.indice])
+            self._original.load()
+        except OSError:
+            self._original = None
+            self.area.config(image="", text="No se pudo abrir la imagen (¿la borraste?)")
+            return self.msg("No pude abrir esa pieza.", error=True)
         varias = len(self.rutas) > 1
         for b in (self.b_ant, self.b_sig):
             b.config(state="normal" if varias else "disabled")
@@ -574,7 +593,7 @@ class VistaDiseno(Vista):
         if not self.rutas:
             ultima = diseno.ultima_pieza()
             if ultima:
-                self.mostrar([ultima])
+                self.mostrar(piezas_del_conjunto(ultima))
 
     # -- acciones --
     def abrir_carpeta(self):
@@ -876,11 +895,7 @@ class App(tk.Tk):
 
     # -- piezas creadas desde el chat --
     def _pieza_creada(self, ruta):
-        rutas = [ruta]
-        m = re.match(r"(carrusel_\d{8}_\d{6})_\d+\.png$", os.path.basename(ruta))
-        if m:
-            rutas = sorted(glob.glob(os.path.join(os.path.dirname(ruta), m.group(1) + "_*.png")),
-                           key=lambda r: int(re.search(r"_(\d+)\.png$", r).group(1)))
+        rutas = piezas_del_conjunto(ruta)
         self.diseno.mostrar(rutas)
         miniatura = Image.open(rutas[0])
         miniatura.thumbnail((220, 275))

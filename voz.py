@@ -2,6 +2,7 @@
 Módulo de voz: conversión texto a voz (pyttsx3) y voz a texto (speech_recognition).
 Mantiene los nombres de funciones del código base: hablar() y transformar_audio_texto().
 """
+import re
 import threading
 import unicodedata
 
@@ -119,4 +120,4 @@ def preguntar(pregunta, crudo=False):
 
 
 def es_afirmativo(respuesta):
-    return any(p in respuesta.split() for p in ("si", "dale", "ok", "okay", "claro", "confirmo", "obvio"))
+    return any(p in re.findall(r"\w+", normalizar(respuesta)) for p in ("si", "dale", "ok", "okay", "claro", "confirmo", "obvio"))

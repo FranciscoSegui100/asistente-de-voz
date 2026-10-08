@@ -178,20 +178,6 @@ def reproducir_youtube(cancion):
     pywhatkit.playonyt(cancion)
 
 
-_ultima_excusa = None
-
-
-def dar_excusa():
-    """Sugiere una excusa (de config.EXCUSAS) al azar, sin repetir la anterior."""
-    global _ultima_excusa
-    import random
-    if not config.EXCUSAS:
-        return hablar("No tengo excusas cargadas. Agregalas en config punto py")
-    opciones = [e for e in config.EXCUSAS if e != _ultima_excusa] or config.EXCUSAS
-    _ultima_excusa = random.choice(opciones)
-    hablar(_ultima_excusa)
-
-
 def contar_chiste():
     import pyjokes
     hablar(pyjokes.get_joke("es"))

@@ -85,7 +85,10 @@ def _lienzo(formato, paleta):
 def _guardar(img, prefijo):
     os.makedirs(config.CARPETA_PIEZAS, exist_ok=True)
     marca_tiempo = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    ruta = os.path.join(config.CARPETA_PIEZAS, f"{prefijo}_{marca_tiempo}.png")
+    ruta, n = os.path.join(config.CARPETA_PIEZAS, f"{prefijo}_{marca_tiempo}.png"), 1
+    while os.path.exists(ruta):     # dos piezas en el mismo segundo no se pisan
+        n += 1
+        ruta = os.path.join(config.CARPETA_PIEZAS, f"{prefijo}_{marca_tiempo}_{n}.png")
     img.save(ruta)
     return ruta
 
@@ -164,7 +167,7 @@ def comando_placa(pedido, preguntar):
     if resp and normalizar(resp) not in ("no", "no gracias", "sin subtitulo"):
         subtitulo = resp
     ruta = crear_placa(texto, formato, paleta, subtitulo)
-    hablar(f"Listo, creé la placa y la guardé en la carpeta piezas")
+    hablar("Listo, creé la placa y la guardé en la carpeta piezas")
     abrir_imagen(ruta)
 
 

@@ -2,6 +2,7 @@
 Planificación de contenido: calendario de publicaciones (sqlite3)
 y recordatorios hablados en segundo plano (schedule + threading).
 """
+import contextlib
 import datetime
 import os
 import re
@@ -24,7 +25,9 @@ NOMBRES_DIAS = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado",
 
 
 # ---------------- Base de datos ----------------
+@contextlib.contextmanager
 def _conectar():
+    """Abre la base, confirma los cambios al salir y siempre cierra la conexión."""
     os.makedirs(os.path.dirname(config.RUTA_DB), exist_ok=True)
     con = sqlite3.connect(config.RUTA_DB)
     con.row_factory = sqlite3.Row
@@ -38,10 +41,26 @@ def _conectar():
             estado    TEXT DEFAULT 'pendiente',
             avisado   INTEGER DEFAULT 0
         )""")
-    return con
+    try:
+        with con:
+            yield con
+    finally:
+        con.close()
 
 
 # ---------------- Interpretación del lenguaje natural ----------------
+def _fecha_proxima(dia, mes, hoy):
+    """Próxima vez que ocurre ese día/mes (este año o el siguiente). None si la fecha no existe (31/02)."""
+    for anio in (hoy.year, hoy.year + 1, hoy.year + 2):
+        try:
+            fecha = datetime.date(anio, mes, dia)
+        except ValueError:
+            continue
+        if fecha >= hoy:
+            return fecha
+    return None
+
+
 def interpretar_fecha(texto, hoy=None):
     """Convierte 'mañana', 'el jueves', '25 de septiembre' o '25/9' en una fecha."""
     t = normalizar(texto)
@@ -49,22 +68,18 @@ def interpretar_fecha(texto, hoy=None):
 
     if "pasado manana" in t:
         return hoy + datetime.timedelta(days=2)
-    if re.search(r"\bmanana\b", t) and "de la manana" not in t and "por la manana" not in t:
+    if re.search(r"\bmanana\b", re.sub(r"\b(?:de|por|a) la manana\b", "", t)):   # "9 de la mañana" no es "mañana"
         return hoy + datetime.timedelta(days=1)
     if re.search(r"\bhoy\b", t):
         return hoy
 
     m = re.search(r"\b(\d{1,2}) de (" + "|".join(MESES) + r")\b", t)
     if m:
-        dia, mes = int(m.group(1)), MESES[m.group(2)]
-        anio = hoy.year if (mes, dia) >= (hoy.month, hoy.day) else hoy.year + 1
-        return datetime.date(anio, mes, dia)
+        return _fecha_proxima(int(m.group(1)), MESES[m.group(2)], hoy)
 
     m = re.search(r"\b(\d{1,2})/(\d{1,2})\b", t)
     if m:
-        dia, mes = int(m.group(1)), int(m.group(2))
-        anio = hoy.year if (mes, dia) >= (hoy.month, hoy.day) else hoy.year + 1
-        return datetime.date(anio, mes, dia)
+        return _fecha_proxima(int(m.group(1)), int(m.group(2)), hoy)
 
     for nombre, num in DIAS.items():
         if re.search(rf"\b{nombre}\b", t):
@@ -90,6 +105,8 @@ def interpretar_hora(texto):
             minuto = int(extra)
     if hora < 12 and ("de la tarde" in t or "de la noche" in t):
         hora += 12
+    elif hora == 12 and "de la noche" in t:
+        hora = 0
     if hora > 23 or minuto > 59:
         return None
     return hora, minuto
@@ -98,15 +115,22 @@ def interpretar_hora(texto):
 def interpretar_publicacion(texto):
     """Extrae red, tipo, fecha, hora y tema de un pedido hablado."""
     t = normalizar(texto)
-    red = next((r for r in REDES if r in t), None)
-    tipo = next((tp for tp in TIPOS if tp in t), "post")
     m = re.search(r"\b(?:sobre|de tema|acerca de)\s+(.+)$", texto, re.IGNORECASE)
     tema = m.group(1).strip() if m else None
-    # quitar del tema una posible fecha/hora dicha al final
+    # Red, tipo, fecha y hora se buscan antes del tema: una palabra del tema ("promo de lunes") no las confunde
+    cabecera = normalizar(texto[:m.start()]) if m else t
+    red = next((r for r in REDES if r in cabecera), None) or next((r for r in REDES if r in t), None)
+    tipo = next((tp for tp in TIPOS if tp in cabecera), None) or next((tp for tp in TIPOS if tp in t), "post")
+    fecha, hora = interpretar_fecha(cabecera), interpretar_hora(cabecera)
     if tema:
-        tema = re.split(r"\s+(?:para el|para|el d[ií]a|a las)\s+", tema, flags=re.IGNORECASE)[0].strip()
-    return {"red": red, "tipo": tipo, "fecha": interpretar_fecha(t),
-            "hora": interpretar_hora(t), "tema": tema}
+        # fecha/hora dichas después del tema ("... sobre la promo para el jueves a las 18")
+        for corte in re.finditer(r"\s+(?:para el|para|el d[ií]a|a las?)\s+", tema, re.IGNORECASE):
+            cola = tema[corte.start():]
+            f, h = interpretar_fecha(cola), interpretar_hora(cola)
+            if f or h:
+                fecha, hora, tema = fecha or f, hora or h, tema[:corte.start()].strip()
+                break
+    return {"red": red, "tipo": tipo, "fecha": fecha, "hora": hora, "tema": tema or None}
 
 
 # ---------------- Operaciones del calendario ----------------

@@ -7,6 +7,7 @@ que clasifica cada comentario y sugiere una respuesta.
 Sin credenciales configuradas, funciona en MODO DEMO con comentarios simulados.
 """
 import os
+import re
 
 import requests
 
@@ -52,7 +53,8 @@ def clasificar_comentario(texto):
     """Motor de inferencia simple: devuelve la primera regla cuya palabra clave aparece."""
     t = normalizar(texto)
     for regla in BASE_CONOCIMIENTO:
-        if any(normalizar(p) in t for p in regla["palabras"]):
+        # la palabra debe empezar una palabra del comentario: "roto" no coincide con "protocolo"
+        if any(re.search(r"(?<!\w)" + re.escape(normalizar(p)), t) for p in regla["palabras"]):
             return regla
     return REGLA_GENERAL
 
