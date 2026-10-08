@@ -6,6 +6,7 @@ import os
 
 # ---------------- Usuario / asistente ----------------
 NOMBRE_ASISTENTE = "Nova"
+NOMBRE_USUARIO = ""          # la interfaz lo pide al arrancar; vacío = sin nombre en los saludos
 
 # Modo texto: escribir comandos por teclado en vez de hablar
 # (útil para probar sin micrófono). Se activa con:  python main.py --texto

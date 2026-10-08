@@ -31,7 +31,7 @@ def saludo_inicial():
         momento = "Buen día"
     else:
         momento = "Buenas tardes"
-    hablar(f"{momento}, soy {config.NOMBRE_ASISTENTE}, "
+    hablar(f"{momento}{' ' + config.NOMBRE_USUARIO if config.NOMBRE_USUARIO else ''}, soy {config.NOMBRE_ASISTENTE}, "
            f"tu asistente de marketing. ¿En qué te puedo ayudar?")
 
 

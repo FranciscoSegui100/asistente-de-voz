@@ -802,6 +802,8 @@ class App(tk.Tk):
         self._texto_voz()
         redes = "Redes: modo demo" if config.MODO_DEMO_REDES else "Redes: Instagram conectado"
         etiqueta(pie, redes, bg=PANEL, font=(FUENTE, 9)).pack(fill="x", pady=(10, 0))
+        if config.NOMBRE_USUARIO:
+            etiqueta(pie, f"Usuario: {config.NOMBRE_USUARIO}", bg=PANEL, font=(FUENTE, 9)).pack(fill="x")
 
     def _agregar_vista(self, clave, clase):
         vista = clase(self.contenido, self)
@@ -901,12 +903,43 @@ class App(tk.Tk):
         self.chat.agregar("bot", imagen=miniatura)
 
 
+def pedir_nombre():
+    """Ventana de bienvenida: pide el nombre de usuario. Devuelve None si se cierra sin entrar."""
+    ventana = tk.Tk()
+    ventana.title(f"{config.NOMBRE_ASISTENTE} · Bienvenida")
+    ventana.configure(bg=BG)
+    ventana.resizable(False, False)
+    ancho, alto = 460, 300
+    ventana.geometry(f"{ancho}x{alto}+{(ventana.winfo_screenwidth() - ancho) // 2}+{(ventana.winfo_screenheight() - alto) // 2 - 40}")
+    resultado = []
+
+    tk.Label(ventana, text=config.NOMBRE_ASISTENTE, bg=BG, fg=ACENTO, font=(FUENTE, 34, "bold")).pack(pady=(34, 0))
+    etiqueta(ventana, "Asistente de marketing", bg=BG).pack()
+    etiqueta(ventana, "¿Cómo te llamás?", bg=BG, font=(FUENTE, 11)).pack(pady=(28, 6))
+    campo = entrada(ventana, justify="center")
+    campo.pack(ipady=8, padx=60, fill="x")
+
+    def entrar(_evento=None):
+        resultado.append(campo.get().strip())
+        ventana.destroy()
+
+    campo.bind("<Return>", entrar)
+    boton(ventana, "Entrar", entrar, primario=True).pack(pady=(20, 0), ipadx=20)
+    campo.focus_set()
+    ventana.mainloop()
+    return resultado[0] if resultado else None
+
+
 def main():
     try:
         import ctypes
         ctypes.windll.shcore.SetProcessDpiAwareness(1)   # texto nítido en pantallas con escala
     except Exception:
         pass
+    nombre = pedir_nombre()
+    if nombre is None:      # cerró la bienvenida sin entrar
+        return
+    config.NOMBRE_USUARIO = nombre
     App().mainloop()
 
 
