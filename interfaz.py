@@ -802,7 +802,6 @@ class App(tk.Tk):
         self._texto_voz()
         redes = "Redes: modo demo" if config.MODO_DEMO_REDES else "Redes: Instagram conectado"
         etiqueta(pie, redes, bg=PANEL, font=(FUENTE, 9)).pack(fill="x", pady=(10, 0))
-        etiqueta(pie, f"Usuario: {config.NOMBRE_USUARIO}", bg=PANEL, font=(FUENTE, 9)).pack(fill="x")
 
     def _agregar_vista(self, clave, clase):
         vista = clase(self.contenido, self)

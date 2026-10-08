@@ -5,7 +5,6 @@ Modificar acá los datos del usuario, la marca y las credenciales.
 import os
 
 # ---------------- Usuario / asistente ----------------
-NOMBRE_USUARIO = "GRANCEL"
 NOMBRE_ASISTENTE = "Nova"
 
 # Modo texto: escribir comandos por teclado en vez de hablar

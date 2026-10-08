@@ -49,7 +49,7 @@ def procesar_pedido(pedido_original):
 
     # ---- Salida y ayuda ----
     if contiene(pedido, "adios", "chau", "salir del asistente", "apagate"):
-        hablar(f"Nos vemos {config.NOMBRE_USUARIO}, ¡éxitos con el contenido!")
+        hablar(f"Nos vemos, ¡éxitos con el contenido!")
         return False
     if re.search(r"\bayuda\b", pedido) or contiene(pedido, "que podes hacer", "que sabes hacer", "comandos"):
         hablar(AYUDA)
